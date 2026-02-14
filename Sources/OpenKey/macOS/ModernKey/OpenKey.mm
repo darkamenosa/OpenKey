@@ -47,6 +47,8 @@ extern int vSendKeyStepByStep;
 extern int vFixChromiumBrowser;
 extern int vPerformLayoutCompat;
 
+extern CFMachPortRef eventTap;
+
 extern "C" {
     //app which must sent special empty character
     NSArray* _niceSpaceApp = @[@"com.sublimetext.3",
@@ -576,6 +578,12 @@ extern "C" {
      * MAIN Callback.
      */
     CGEventRef OpenKeyCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
+        // Re-enable the event tap if macOS disabled it due to timeout
+        if (type == kCGEventTapDisabledByTimeout || type == kCGEventTapDisabledByUserInput) {
+            CGEventTapEnable(eventTap, true);
+            return event;
+        }
+
         //dont handle my event
         if (CGEventGetIntegerValueField(event, kCGEventSourceStateID) == CGEventSourceGetSourceStateID(myEventSource)) {
             return event;
